@@ -1,0 +1,274 @@
+<title>전북 아파트 거래 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 지적도 같은 차분한 지도 화면 — 왼쪽 지도, 오른쪽 단지 목록, 아래 전체 목록표 */
+:root{
+  --bg:#f4f6f5; --panel:#ffffff; --fg:#1c2622; --muted:#5d6b66; --line:#d5ddda;
+  --land:#e6ece9; --land-hi:#cfe0d8; --accent:#1f6b5a; --accent-soft:#d4e8e1;
+  --dot:#c4511c; --dot-ref:#8a6d1f; --shade1:#e3ece8; --shade2:#bcd6cc; --shade3:#86b8a6; --shade4:#4f927c; --shade5:#1f6b5a;
+  --font:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111816; --panel:#18211e; --fg:#e4ece9; --muted:#97a8a2; --line:#2c3a35;
+  --land:#1f2a26; --land-hi:#2a3b35; --accent:#5fc0a3; --accent-soft:#1f3a32;
+  --dot:#f08a4b; --dot-ref:#d9b45a; --shade1:#1f2b27; --shade2:#24433a; --shade3:#2d6252; --shade4:#3b8a72; --shade5:#5fc0a3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --panel:#18211e; --fg:#e4ece9; --muted:#97a8a2; --line:#2c3a35;
+  --land:#1f2a26; --land-hi:#2a3b35; --accent:#5fc0a3; --accent-soft:#1f3a32;
+  --dot:#f08a4b; --dot-ref:#d9b45a; --shade1:#1f2b27; --shade2:#24433a; --shade3:#2d6252; --shade4:#3b8a72; --shade5:#5fc0a3; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header h1{font-size:1.6rem;margin:0;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{font-size:.82rem;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted)}
+.chip b{color:var(--fg);font-variant-numeric:tabular-nums}
+.main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.mapbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mapbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.crumb{font-weight:600}
+.crumb span{color:var(--muted);font-weight:400}
+button{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--panel);cursor:pointer}
+button[disabled]{opacity:.4;cursor:default}
+button:focus-visible,.row:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg#map{display:block;width:100%;height:auto;aspect-ratio:600/480;touch-action:none}
+.sgg{fill:var(--land);stroke:var(--panel);stroke-width:1.2;cursor:pointer;transition:fill .2s,opacity .3s}
+.sgg:hover{filter:brightness(.95)}
+.sgg.dim{opacity:.35}
+.sgg.sel{stroke:var(--accent);stroke-width:2}
+.lbl{font-size:12px;fill:var(--fg);text-anchor:middle;pointer-events:none;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px}
+.lbl .n{font-family:var(--mono);font-weight:500;fill:var(--accent)}
+.dot{fill:var(--dot);fill-opacity:.8;stroke:var(--panel);cursor:pointer}
+.dot.ref{fill:var(--panel);stroke:var(--dot-ref);fill-opacity:1}
+.dot.hi{fill:var(--accent);fill-opacity:1}
+.legend{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 4px 16px rgba(0,0,0,.12);max-width:240px;z-index:5}
+.tip b{display:block;font-size:.9rem}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;max-height:760px;min-width:0}
+.side h2{font-size:1rem;margin:0;padding:12px 14px;border-bottom:1px solid var(--line)}
+.side h2 small{color:var(--muted);font-weight:400}
+.list{overflow:auto;padding:4px 0}
+.row{display:grid;grid-template-columns:2.4em minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.row:hover,.row.on{background:var(--accent-soft)}
+.row .rk{font-family:var(--mono);color:var(--muted);font-size:.8rem}
+.row .nm{min-width:0}
+.row .nm div{font-weight:600;overflow-wrap:anywhere}
+.row .nm small{color:var(--muted)}
+.row .tx{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.row .tx small{display:block;color:var(--muted);font-family:var(--font);font-size:.75rem}
+.note{font-size:.8rem;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+section.tables h2{font-size:1.15rem;margin:8px 0 4px}
+section.tables>p{margin:0 0 10px;color:var(--muted);font-size:.88rem}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
+summary{padding:10px 14px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+summary span{color:var(--muted);font-weight:400;font-size:.88rem}
+.tw{overflow-x:auto;padding:0 14px 12px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:560px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:500;font-size:.78rem;letter-spacing:.03em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.gu{font-size:.92rem;margin:10px 0 4px;color:var(--accent)}
+.src{font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.sgg{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>전북 아파트 거래 지도</h1>
+    <p>2026년 1월 1일부터 11월 23일까지 매매 신고가 30건 이상인 아파트 단지를 시·군·구별로 표시했음. 시군구를 누르면 그 지역이 확대되고 해당 단지가 점으로 나옴.</p>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <div class="main">
+    <div class="mapbox" id="mapbox">
+      <div class="mapbar">
+        <div class="crumb" id="crumb">전북특별자치도 <span>· 시군구를 선택하면 확대됨</span></div>
+        <button id="reset" disabled>전체 보기</button>
+      </div>
+      <svg id="map" role="img" aria-label="전북특별자치도 시군구 지도"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <aside class="side">
+      <h2 id="sideTitle">시군구별 단지 수</h2>
+      <div class="list" id="list"></div>
+      <div class="note">점 크기는 거래 건수에 비례함. 위치는 단지가 속한 법정동 중심 근처로 잡은 근삿값이라 실제 단지 위치와 다를 수 있음.</div>
+    </aside>
+  </div>
+
+  <section class="tables">
+    <h2>시군구별 전체 목록</h2>
+    <p>거래 건수는 계약해제 신고분을 뺀 매매 건수임. 평균가는 기간 중 거래 전체(모든 평형)의 평균이라 평형별 시세와 다름.</p>
+    <div id="tables"></div>
+    <p class="src">자료: 국토교통부 아파트 매매 실거래가(공공데이터포털 RTMSDataSvcAptTrade, 2026-11-23 기준 집계). 경계: 행정동 경계(vuski/admdongkor 2025)를 시군구로 합친 것.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const SGG = __SGG__;
+const CX = __CX__;
+let current = null;
+const ORDER = ["전주시 완산구","전주시 덕진구","군산시","익산시","정읍시","남원시","김제시","완주군","진안군","무주군","장수군","임실군","순창군","고창군","부안군"];
+const short = n => n.startsWith("전주시 ") ? n.slice(4) : n;
+const won = v => v >= 10000 ? (v/10000).toFixed(v>=100000?1:1).replace(/\.0$/,"") + "억" : v.toLocaleString() + "만";
+const main = CX.filter(d => d.ref === "False" || d.ref === false);
+const refs = CX.filter(d => d.ref === "True" || d.ref === true);
+const bySgg = d3.group(main, d => d.sg);
+const cnt = n => (bySgg.get(n) || []).length;
+
+// chips
+const total = main.length, txSum = d3.sum(main, d => d.tx);
+document.getElementById("chips").innerHTML =
+  `<span class="chip">대상 단지 <b>${total}</b>곳</span>` +
+  `<span class="chip">해당 단지 매매 합계 <b>${txSum.toLocaleString()}</b>건</span>` +
+  `<span class="chip">최다 거래 <b>${d3.greatest(main,d=>d.tx).name}</b> (${d3.max(main,d=>d.tx)}건)</span>` +
+  `<span class="chip">기간 <b>2026.01.01 ~ 11.23</b></span>`;
+
+const svg = d3.select("#map"), W = 600, H = 480;
+svg.attr("viewBox", `0 0 ${W} ${H}`);
+const proj = d3.geoMercator().fitExtent([[18,18],[W-18,H-18]], SGG);
+const path = d3.geoPath(proj);
+const g = svg.append("g");
+const shadeVars = ["--shade1","--shade2","--shade3","--shade4","--shade5"];
+const bucket = c => c === 0 ? 0 : c < 5 ? 1 : c < 20 ? 2 : c < 40 ? 3 : 4;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+const polys = g.selectAll("path.sgg").data(SGG.features).join("path")
+  .attr("class","sgg").attr("d", path)
+  .attr("tabindex",0).attr("role","button")
+  .attr("aria-label", d => `${d.properties.name} ${cnt(d.properties.name)}곳`)
+  .on("click", (e,d) => select(d.properties.name))
+  .on("keydown", (e,d) => { if (e.key==="Enter"||e.key===" ") { e.preventDefault(); select(d.properties.name); } });
+function paint(){ polys.style("fill", d => d.properties.name===current ? css("--land-hi") : css(shadeVars[bucket(cnt(d.properties.name))])); }
+paint();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
+new MutationObserver(paint).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+const labels = g.append("g").selectAll("text").data(SGG.features).join("text").attr("class","lbl")
+  .attr("transform", d => { const c = path.centroid(d); const n=d.properties.name;
+     const dy = n==="전주시 완산구"?10: n==="전주시 덕진구"?-6:0; return `translate(${c[0]},${c[1]+dy})`; });
+labels.append("tspan").text(d => short(d.properties.name) + " ");
+labels.append("tspan").attr("class","n").text(d => cnt(d.properties.name));
+
+const dotsG = g.append("g");
+const r = d3.scaleSqrt().domain([0, 160]).range([0, 15]);
+const tip = document.getElementById("tip"), box = document.getElementById("mapbox");
+let k = 1;
+
+const zoom = d3.zoom().scaleExtent([1, 40]).on("zoom", e => {
+  k = e.transform.k; g.attr("transform", e.transform);
+  labels.style("font-size", (12/k)+"px").style("stroke-width",(3/k)+"px");
+  polys.style("stroke-width", (current?1.6:1.2)/k);
+  dotsG.selectAll("circle").attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k);
+});
+svg.call(zoom).on("dblclick.zoom", null);
+
+function showTip(e, d){
+  tip.hidden = false;
+  tip.innerHTML = `<b>${d.name}</b>${d.sg} ${d.dong}<br>2026년 매매 <b style="display:inline">${d.tx}건</b>${d.ref===true||d.ref==="True"?" (30건 미달 · 참고)":""}<br>` +
+    `준공 ${d.year ?? "-"}년 · ${d.hh ? d.hh.toLocaleString()+"세대" : "세대수 미상"}<br>평균 거래가 ${won(d.avg)}원`;
+  const b = box.getBoundingClientRect(); let x = e.clientX - b.left + 12, y = e.clientY - b.top + 12;
+  if (x > b.width - 250) x -= 260; tip.style.left = x+"px"; tip.style.top = y+"px";
+}
+function hideTip(){ tip.hidden = true; }
+
+function select(name){
+  current = name;
+  const f = SGG.features.find(x => x.properties.name === name);
+  const [[x0,y0],[x1,y1]] = path.bounds(f);
+  const s = Math.min(40, 0.86 / Math.max((x1-x0)/W, (y1-y0)/H));
+  const t = d3.zoomIdentity.translate(W/2, H/2).scale(s).translate(-(x0+x1)/2, -(y0+y1)/2);
+  const dur = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 750;
+  svg.transition().duration(dur).call(zoom.transform, t);
+  paint();
+  polys.classed("dim", d => d.properties.name !== name).classed("sel", d => d.properties.name === name);
+  labels.style("display", d => d.properties.name === name ? "none" : null);
+  const data = (bySgg.get(name) || []).concat(name === "임실군" ? refs : []).sort((a,b)=>b.tx-a.tx);
+  dotsG.selectAll("circle").data(data, d => d.sg+d.name).join("circle")
+    .attr("class", d => "dot" + (d.ref===true||d.ref==="True" ? " ref" : ""))
+    .attr("cx", d => proj([d.lon,d.lat])[0]).attr("cy", d => proj([d.lon,d.lat])[1])
+    .attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k)
+    .on("mouseenter click", (e,d) => { showTip(e,d); hilite(d); }).on("mouseleave", hideTip);
+  document.getElementById("crumb").innerHTML = `전북특별자치도 › ${name} <span>· 30건 이상 ${cnt(name)}곳</span>`;
+  document.getElementById("reset").disabled = false;
+  renderList(name, data);
+}
+function reset(){
+  current = null; hideTip();
+  svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
+  paint(); polys.classed("dim", false).classed("sel", false); labels.style("display", null);
+  dotsG.selectAll("circle").remove();
+  document.getElementById("crumb").innerHTML = `전북특별자치도 <span>· 시군구를 선택하면 확대됨</span>`;
+  document.getElementById("reset").disabled = true;
+  renderOverview();
+}
+document.getElementById("reset").onclick = reset;
+
+function hilite(d){
+  dotsG.selectAll("circle").classed("hi", x => x === d).filter(x => x === d).raise();
+  document.querySelectorAll(".row").forEach(el => el.classList.toggle("on", el.dataset.key === d.sg+d.name));
+}
+function renderOverview(){
+  document.getElementById("sideTitle").innerHTML = `시군구별 단지 수 <small>· 30건 이상</small>`;
+  const list = document.getElementById("list"); list.innerHTML = "";
+  ORDER.forEach((n,i) => {
+    const arr = bySgg.get(n) || [];
+    const el = document.createElement("div"); el.className = "row"; el.tabIndex = 0;
+    const top = arr.length ? d3.greatest(arr, d=>d.tx) : null;
+    el.innerHTML = `<span class="rk">${String(i+1).padStart(2,"0")}</span><span class="nm"><div>${n}</div><small>${top ? "최다 " + top.name + " " + top.tx + "건" : n==="임실군" ? "최다 전북임실코아루더베스트 27건 (참고)" : "30건 이상 단지 없음"}</small></span><span class="tx">${arr.length}곳</span>`;
+    el.onclick = () => select(n); el.onkeydown = e => { if(e.key==="Enter") select(n); };
+    list.appendChild(el);
+  });
+}
+function renderList(name, data){
+  document.getElementById("sideTitle").innerHTML = `${name} <small>· 거래 많은 순</small>`;
+  const list = document.getElementById("list"); list.innerHTML = "";
+  if (!data.length){ list.innerHTML = `<div class="note">이 지역에는 올해 30건 이상 거래된 단지가 없음.</div>`; return; }
+  data.forEach((d,i) => {
+    const el = document.createElement("div"); el.className = "row"; el.tabIndex = 0; el.dataset.key = d.sg+d.name;
+    const isRef = d.ref===true||d.ref==="True";
+    el.innerHTML = `<span class="rk">${isRef ? "참고" : i+1}</span><span class="nm"><div>${d.name}</div><small>${d.dong} · ${d.year ?? "-"}년 준공${d.hh ? " · "+d.hh.toLocaleString()+"세대":""}</small></span><span class="tx">${d.tx}건<small>평균 ${won(d.avg)}</small></span>`;
+    const go = () => { hilite(d); const c = dotsG.selectAll("circle").filter(x=>x===d).node();
+      if (c){ const b=c.getBoundingClientRect(); showTip({clientX:b.left+b.width/2, clientY:b.top+b.height/2}, d);} };
+    el.onclick = go; el.onkeydown = e => { if(e.key==="Enter") go(); };
+    list.appendChild(el);
+  });
+  if (name === "임실군") list.insertAdjacentHTML("afterbegin", `<div class="note">임실군은 30건 이상 단지가 없음. 요청에 따라 거래가 많은 단지 4곳을 빈 점(참고)으로 표시했음.</div>`);
+}
+renderOverview();
+
+// legend
+const lg = document.getElementById("legend");
+lg.innerHTML = ["0곳","1~4곳","5~19곳","20~39곳","40곳 이상"].map((t,i)=>`<span><i class="sw" style="background:var(${shadeVars[i]})"></i>${t}</span>`).join("") +
+  `<span><i class="sw" style="background:var(--dot);border-radius:50%;width:10px"></i>30건 이상 단지</span><span><i class="sw" style="border:1.5px solid var(--dot-ref);border-radius:50%;width:10px"></i>참고(임실)</span>`;
+
+// tables grouped 시·군 → 구
+const tb = document.getElementById("tables");
+const groups = [["전주시",["전주시 완산구","전주시 덕진구"]]].concat(ORDER.slice(2).map(n=>[n,[n]]));
+groups.forEach(([city, subs]) => {
+  const n = d3.sum(subs, s => cnt(s)) + (city==="임실군" ? 0 : 0);
+  const det = document.createElement("details");
+  let html = `<summary>${city}<span>${n ? n+"곳" : city==="임실군" ? "0곳 · 참고 4곳" : "해당 없음"}</span></summary><div class="tw">`;
+  subs.forEach(s => {
+    let arr = (bySgg.get(s) || []).slice().sort((a,b)=>b.tx-a.tx);
+    const isImsil = s === "임실군";
+    if (!arr.length && !isImsil) return;
+    if (isImsil) arr = refs.slice().sort((a,b)=>b.tx-a.tx);
+    if (subs.length > 1) html += `<div class="gu">${short(s)} · ${arr.length}곳</div>`;
+    if (isImsil) html += `<div class="gu">30건 이상 단지 없음 · 참고용 상위 단지</div>`;
+    html += `<table><thead><tr><th class="num">순위</th><th>단지명</th><th>법정동</th><th class="num">거래</th><th class="num">준공</th><th class="num">세대수</th><th class="num">평균가</th></tr></thead><tbody>` +
+      arr.map((d,i)=>`<tr><td class="num">${i+1}</td><td>${d.name}</td><td>${d.dong}</td><td class="num">${d.tx}</td><td class="num">${d.year ?? "-"}</td><td class="num">${d.hh ? d.hh.toLocaleString() : "-"}</td><td class="num">${won(d.avg)}</td></tr>`).join("") + `</tbody></table>`;
+  });
+  html += `</div>`;
+  if (!n && city!=="임실군") html = `<summary>${city}<span>30건 이상 단지 없음</span></summary>`;
+  det.innerHTML = html; tb.appendChild(det);
+});
+</script>
