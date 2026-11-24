@@ -214,7 +214,7 @@ function select(name){
     .attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k)
     .on("mouseenter click", (e,d) => { showTip(e,d); hilite(d); }).on("mouseleave", hideTip);
   document.getElementById("crumb").innerHTML = `전북특별자치도 › ${name} <span>· ${thr(name)}건 이상 ${cnt(name)}곳</span>`;
-  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <a href="imsil.html" target="_blank" rel="noopener" style="margin-left:6px;color:var(--accent);font-weight:600">임실군 지도 새 창 ↗</a>`); try { window.open("imsil.html", "_blank", "noopener"); } catch(e){} }
+  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <a href="https://claude.ai/artifact/HsDdNJjRHkHYXFrvxn2gAP" target="_blank" rel="noopener" style="margin-left:6px;color:var(--accent);font-weight:600">임실군 지도 새 창 ↗</a>`); try { window.open("https://claude.ai/artifact/HsDdNJjRHkHYXFrvxn2gAP", "_blank", "noopener"); } catch(e){} }
   document.getElementById("reset").disabled = false;
   renderList(name, data);
   dongReady.then(() => { if (current === name) drawDongs(name); });
