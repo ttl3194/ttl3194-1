@@ -20,3 +20,10 @@
   → 사용자 PC를 Remote Control로 연결한 뒤 그 PC에서 받기로 함(사용자 선택 2번). 아직 연결 폴더 없음.
   - 인증키는 저장소에 넣지 않음(사용자에게 다시 받거나 보안 입력으로 받을 것)
 - 대상 지번(임실군): 이도리 982·272·332·182-2·385-2·212·183-3·214, 관촌리 584-2·489-5·498-6, 오수리 387-27·351-8·376-2
+
+## 브이월드 지적도·건물 윤곽 반영 (2026-11-24, 사용자 PC에서 실행)
+- 대상 지번 14곳 = 임실 실거래 아파트 14개 단지(필지 안 건물명으로 확인. 이도리 214는 건물명 미등록 15층 3동 → 고운라피네1단지로 추정)
+- 받기: cd jeonbuk && node fetch_vworld.mjs → vworld_parcels.json (국내 IP 필요, 키는 저장소 루트 .env 의 VWORLD_KEY, 커밋 제외)
+- 반영: node build_parcels.mjs → parcels_section.html → imsil.html(<!--parcels--> 구간) → jeonbuk_apt_map.html 재생성
+- build_imsil.py 로 다시 만들 때도 __PARCELS__ 자리에 parcels_section.html 이 들어감
+- claude.ai 게시본(YBn284sHLrBHAdECzTvoH3)은 아직 이전 버전

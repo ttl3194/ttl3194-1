@@ -48,4 +48,6 @@ def won(v): return (f"{v/10000:.1f}".rstrip('0').rstrip('.')+'억') if v>=10000 
 rows=''.join(f'<tr><td class="n">{i+1}</td><td>{c["name"]}</td><td>{c["dong"]}</td><td class="n">{c["tx"]}</td><td class="n">{c["year"]}</td><td class="n">{c["hh"]}</td><td class="n">{won(c["avg"])}</td></tr>' for i,c in enumerate(CX))
 t=open('/home/user/ttl3194-1/jeonbuk/imsil_static_template.html').read()
 t=t.replace('__FULL__',full).replace('__ZOOM__',zoom).replace('__ROWS__',rows)
+import os  # 단지별 지적도: node build_parcels.mjs 가 만든 parcels_section.html
+t=t.replace('__PARCELS__',open(J+'parcels_section.html').read() if os.path.exists(J+'parcels_section.html') else '')
 open(J+'imsil.html','w').write(t); print(len(t))
