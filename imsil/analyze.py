@@ -55,13 +55,18 @@ def factors(prev, cur, label_prev, label_cur):
     for r in cur: gc[r['grp']].append(r['pp'])
     common = [g for g in gc if g in gp]
     like = None
+    nlike = sum(len(gp[g]) + len(gc[g]) for g in common)
+    if common and nlike < 4:
+        names = ', '.join(g.split('|')[0] for g in common)
+        out.append(f"동일 단지·평형 비교 거래가 {nlike}건뿐({names}) — 층·수리 상태 차이를 걸러낼 수 없어 시세 판단에 쓰지 않음")
+        common = []
     if common:
         w = [(len(gp[g]) + len(gc[g]), st.mean(gc[g]) / st.mean(gp[g]) - 1) for g in common]
         like = sum(n * x for n, x in w) / sum(n for n, _ in w) * 100
         names = ', '.join(g.split('|')[0] + f" {g.split('|')[1]}㎡" for g in common)
         out.append(f"동일 단지·평형({names}) 기준 변동 {like:+.1f}%")
     if like is None:
-        verdict = '동일 단지·평형 비교 거래가 없어 실질 시세 변동인지 판단 불가 — 거래 구성 차이 가능성 높음'
+        verdict = '동일 단지·평형 비교 거래가 없거나 너무 적어(4건 미만) 실질 시세 변동인지 판단 불가 — 거래 구성 차이 가능성 높음'
     elif abs(like) < 2:
         verdict = '동일 단지·평형 기준으로는 ±2% 미만 → 시세 변동이 아니라 거래된 단지·층 구성이 달라서 생긴 차이로 판단'
     else:
