@@ -88,7 +88,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
 <div class="wrap">
   <header>
     <h1>전북 아파트 거래 지도</h1>
-    <p>2026년 1월 1일부터 11월 23일까지 매매 신고가 많은 아파트 단지를 시·군·구별로 표시했음. 전주·군산·익산·정읍·완주는 30건 이상, 김제·남원·고창·부안·순창·임실·장수·진안·무주는 5건 이상 단지를 넣었음. 시군구를 누르면 그 지역이 확대되면서 읍·면·동 경계와 이름이 함께 나오고, 해당 단지가 점으로 표시됨. 마우스 휠이나 두 손가락으로 더 확대할 수 있음.</p>
+    <p>2026년 1월 1일부터 11월 23일까지 매매 신고가 많은 아파트 단지를 시·군·구별로 표시했음. 전주·군산·익산은 30건 이상, 정읍·완주·김제·남원·고창·부안·순창·임실·장수·진안·무주는 5건 이상 단지를 넣었음. 시군구를 누르면 그 지역이 확대되면서 읍·면·동 경계와 이름이 함께 나오고, 해당 단지가 점으로 표시됨. 마우스 휠이나 두 손가락으로 더 확대할 수 있음.</p>
     <div class="chips" id="chips"></div>
   </header>
 
@@ -126,7 +126,7 @@ const ORDER = ["전주시 완산구","전주시 덕진구","군산시","익산�
 const short = n => n.startsWith("전주시 ") ? n.slice(4) : n;
 const won = v => v >= 10000 ? (v/10000).toFixed(v>=100000?1:1).replace(/\.0$/,"") + "억" : v.toLocaleString() + "만";
 const main = CX;
-const LOW = new Set(["김제시","부안군","고창군","순창군","남원시","임실군","장수군","진안군","무주군"]);
+const LOW = new Set(["정읍시","완주군","김제시","부안군","고창군","순창군","남원시","임실군","장수군","진안군","무주군"]);
 const thr = n => LOW.has(n) ? 5 : 30;
 const isLow = d => d.tx < 30;
 const bySgg = d3.group(main, d => d.sg);
@@ -208,7 +208,7 @@ function select(name){
   polys.classed("dim", d => d.properties.name !== name).classed("sel", d => d.properties.name === name);
   labels.style("display", d => d.properties.name === name ? "none" : null);
   const data = (bySgg.get(name) || []).slice().sort((a,b)=>b.tx-a.tx);
-  dotsG.selectAll("circle").data(data, d => d.sg+d.name).join("circle")
+  dotsG.selectAll("circle").data(data, d => d.sg+d.dong+d.name).join("circle")
     .attr("class", d => "dot" + (isLow(d) ? " low" : ""))
     .attr("cx", d => proj([d.lon,d.lat])[0]).attr("cy", d => proj([d.lon,d.lat])[1])
     .attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k)
@@ -245,10 +245,10 @@ document.getElementById("reset").onclick = reset;
 
 function hilite(d){
   dotsG.selectAll("circle").classed("hi", x => x === d).filter(x => x === d).raise();
-  document.querySelectorAll(".row").forEach(el => el.classList.toggle("on", el.dataset.key === d.sg+d.name));
+  document.querySelectorAll(".row").forEach(el => el.classList.toggle("on", el.dataset.key === d.sg+d.dong+d.name));
 }
 function renderOverview(){
-  document.getElementById("sideTitle").innerHTML = `시군구별 단지 수 <small>· 기준 30건 / 9개 시군 5건</small>`;
+  document.getElementById("sideTitle").innerHTML = `시군구별 단지 수 <small>· 전주·군산·익산 30건 / 나머지 5건</small>`;
   const list = document.getElementById("list"); list.innerHTML = "";
   ORDER.forEach((n,i) => {
     const arr = bySgg.get(n) || [];
@@ -264,7 +264,7 @@ function renderList(name, data){
   const list = document.getElementById("list"); list.innerHTML = "";
   if (!data.length){ list.innerHTML = `<div class="note">이 지역에는 올해 ${thr(name)}건 이상 거래된 단지가 없음.</div>`; return; }
   data.forEach((d,i) => {
-    const el = document.createElement("div"); el.className = "row"; el.tabIndex = 0; el.dataset.key = d.sg+d.name;
+    const el = document.createElement("div"); el.className = "row"; el.tabIndex = 0; el.dataset.key = d.sg+d.dong+d.name;
     el.innerHTML = `<span class="rk">${i+1}</span><span class="nm"><div>${d.name}</div><small>${d.dong} · ${d.year ?? "-"}년 준공${d.hh ? " · "+d.hh.toLocaleString()+"세대":""}</small></span><span class="tx">${d.tx}건<small>평균 ${won(d.avg)}</small></span>`;
     const go = () => { hilite(d); const c = dotsG.selectAll("circle").filter(x=>x===d).node();
       if (c){ const b=c.getBoundingClientRect(); showTip({clientX:b.left+b.width/2, clientY:b.top+b.height/2}, d);} };
@@ -278,7 +278,7 @@ renderOverview();
 // legend
 const lg = document.getElementById("legend");
 lg.innerHTML = ["0곳","1~4곳","5~19곳","20~39곳","40곳 이상"].map((t,i)=>`<span><i class="sw" style="background:var(${shadeVars[i]})"></i>${t}</span>`).join("") +
-  `<span><i class="sw" style="background:var(--shade2);border:1px solid var(--muted)"></i>단지가 있는 읍·면·동</span><span><i class="sw" style="background:var(--dot);border-radius:50%;width:10px"></i>30건 이상 단지</span><span><i class="sw" style="background:var(--dot-ref);border-radius:50%;width:10px"></i>5~29건 단지(9개 시군)</span>`;
+  `<span><i class="sw" style="background:var(--shade2);border:1px solid var(--muted)"></i>단지가 있는 읍·면·동</span><span><i class="sw" style="background:var(--dot);border-radius:50%;width:10px"></i>30건 이상 단지</span><span><i class="sw" style="background:var(--dot-ref);border-radius:50%;width:10px"></i>5~29건 단지(11개 시군)</span>`;
 
 // tables grouped 시·군 → 구
 const tb = document.getElementById("tables");

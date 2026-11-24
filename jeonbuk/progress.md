@@ -26,3 +26,15 @@
 - 순창 offset0-5 저장(마지막6) -> limit3 page2; 무주 기존행 삭제
 - 순창·무주 완료. 장수 기존행 삭제 -> 장수/진안 조회
 - 수집 전부 완료. 다음: build/템플릿 통합
+## 3차 요청: 정읍·완주도 5건 기준 추가. 정읍 offset5부터, 완주 offset12부터(중복 dedupe)
+- 정읍 offset5-9 저장 -> limit5 page2. 주의: 동명 단지(현대) 있어 dedupe키에 dong 포함 필요, JS key도
+- 정읍 offset~14 저장 -> limit5 page3
+- 정읍 offset~19 저장(마지막13) -> limit5 page4
+- 정읍 offset~24 저장(마지막12) -> limit5 page5
+- 정읍 offset~29 저장(마지막8) -> limit5 page6
+- 정읍 offset~34 저장(마지막7) -> limit5 page7
+- 정읍 완료. 완주 limit6 page2(offset12-17)부터
+- 완주 offset18-23 저장. 남은: offset17(limit1 page17), limit6 page4~
+- 완주 offset~29 저장(마지막12) -> limit6 page5
+- 완주 offset~35 저장(마지막7) -> limit6 page6
+- 정읍·완주 수집 완료. 다음: build2 LOW에 정읍·완주 추가, dedupe키 dong포함, 템플릿 텍스트, JS key
