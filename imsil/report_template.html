@@ -122,7 +122,7 @@ td.ex{color:var(--muted);text-decoration:line-through}
   </section>
 
   <section class="card" aria-labelledby="h-seg">
-    <div class="sec-head"><h2 id="h-seg">평형별·층별 변동 (±2% 이상 강조)</h2>
+    <div class="sec-head"><h2 id="h-seg">평형별·층별 분기 변동 (±2% 이상 강조)</h2>
       <div class="tabs" role="tablist">
         <button type="button" role="tab" id="tabArea" aria-selected="true">평형별</button>
         <button type="button" role="tab" id="tabFloor" aria-selected="false">층별</button>
@@ -132,13 +132,13 @@ td.ex{color:var(--muted);text-decoration:line-through}
       <span><i class="sw" style="background:var(--down-soft)"></i>실제 시세 하락(동일 단지·평형 기준도 −2% 이상)</span>
       <span><i class="sw" style="background:var(--mix-soft)"></i>평균은 2% 넘게 움직였지만 거래 구성·표본 차이 때문(시세 변동 아님 또는 판단 불가)</span>
     </div>
-    <h3>월별 (전월 대비)</h3>
-    <div class="tw"><table id="tSegM"></table></div>
     <h3>분기별 (전 분기 대비)</h3>
     <div class="tw"><table id="tSegQ"></table></div>
-    <h3>변동 요인 분석</h3>
-    <p class="note" style="margin:0">강조된 칸을 누르면 아래 목록의 해당 줄이 표시됨. 전월에 거래가 없으면 직전 거래월과 비교했음. 세부 근거는 요청 시 제공.</p>
+    <h3>분기별 변동 요인 분석</h3>
+    <p class="note" style="margin:0">전 분기보다 평당가가 2% 이상 움직인 곳만 표시함. 강조된 칸을 누르면 아래 목록의 해당 줄이 표시됨. 4분기는 10~11월 거래만 포함. 세부 근거는 요청 시 제공.</p>
     <div class="flags" id="flags"></div>
+    <h3>월별 평당가 (참고)</h3>
+    <div class="tw"><table id="tSegM"></table></div>
   </section>
 
 
@@ -216,8 +216,7 @@ function renderSeg(){
   S.forEach(s => { h += `<tr><td>${s.label}<small>${s.n}건</small></td>`;
     s.months.forEach((c,i) => { const e = s.mom[i]; const id = `f-${mode}-${s.key}-m${c.m}`;
       if(!c.n){ h += "<td>-</td>"; return; }
-      const chg = e ? `<span class="chg">${pct(e.ch)}${e.gap>1?` <small style="display:inline">(${e.from}월比)</small>`:""}</span>${e.flag?`<small class="why">${e.short}</small>`:""}` : "";
-      h += `<td class="${cls(e)}${e&&e.flag?" flag":""}" ${e&&e.flag?`tabindex="0" data-go="${id}"`:""}>${c.pp.toLocaleString()}만<small>${c.n}건 · ${won(c.price)}</small>${chg}</td>`; });
+      h += `<td>${c.pp.toLocaleString()}만<small>${c.n}건 · ${won(c.price)}</small></td>`; });
     h += `<td>${s.pp.toLocaleString()}만</td></tr>`; });
   $("tSegM").innerHTML = h + "</tbody>";
   h = `<thead><tr><th>${mode==="area"?"평형":"층"}</th>${[1,2,3,4].map(q=>`<th>${q}분기${q===4?"(10~11월)":""}</th>`).join("")}</tr></thead><tbody>`;
@@ -230,8 +229,6 @@ function renderSeg(){
   // 요인 카드
   let f = "";
   S.forEach(s => {
-    s.mom.forEach((e,i) => { if(!e||!e.flag) return; const m = s.months[i].m;
-      f += card(`f-${mode}-${s.key}-m${m}`, `${s.label} · ${m}월 (${e.from}월 대비) ${pct(e.ch)}`, e); });
     s.qoq.forEach((e,i) => { if(!e||!e.flag) return; const q = s.quarters[i].q;
       f += card(`f-${mode}-${s.key}-q${q}`, `${s.label} · ${q}분기 (${e.from}분기 대비) ${pct(e.ch)}`, e); });
   });
