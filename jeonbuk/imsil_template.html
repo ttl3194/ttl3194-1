@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>임실군 아파트 지도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f4f6f5; --panel:#ffffff; --fg:#1c2622; --muted:#5d6b66; --line:#d5ddda;
+  --land:#e6ece9; --land-hi:#bcd6cc; --accent:#1f6b5a; --dot:#c4511c; --dot-low:#8a6d1f;
+  --font:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111816; --panel:#18211e; --fg:#e4ece9; --muted:#97a8a2; --line:#2c3a35;
+  --land:#1f2a26; --land-hi:#24433a; --accent:#5fc0a3; --dot:#f08a4b; --dot-low:#d9b45a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --panel:#18211e; --fg:#e4ece9; --muted:#97a8a2; --line:#2c3a35;
+  --land:#1f2a26; --land-hi:#24433a; --accent:#5fc0a3; --dot:#f08a4b; --dot-low:#d9b45a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55;
+  padding:20px max(16px,env(safe-area-inset-left,0px)) 40px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-size:1.5rem;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.main{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:.9rem}
+.bar span{color:var(--muted)}
+button{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--panel);cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+.btns{display:flex;gap:6px}
+svg{display:block;width:100%;height:auto;touch-action:none}
+.myeon{fill:var(--land);stroke:var(--panel);stroke-linejoin:round}
+.myeon.has{fill:var(--land-hi)}
+.outline{fill:none;stroke:var(--accent);stroke-linejoin:round}
+.lbl{font-size:12px;fill:var(--fg);paint-order:stroke;stroke:var(--panel);text-anchor:middle;pointer-events:none}
+.lbl.has{font-weight:700}
+.dot{fill:var(--dot);fill-opacity:.85;stroke:var(--panel);cursor:pointer}
+.dot.low{fill:var(--dot-low)}
+.dot.hi{stroke:var(--fg)}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:240px}
+.tip b{display:block}
+.side h2{font-size:1rem;margin:0;padding:12px 14px;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;align-items:center}
+.row:hover,.row.on{background:var(--land)}
+.row .rk{color:var(--muted);font-variant-numeric:tabular-nums}
+.row small{display:block;color:var(--muted);font-size:.78rem}
+.row .tx{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.note{padding:10px 14px;font-size:.8rem;color:var(--muted)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>임실군 아파트 거래 지도</h1>
+    <p>임실군 12개 읍·면 경계와 2026년(1.1~11.24) 매매 신고가 5건 이상인 아파트 단지를 표시했음. 단지는 모두 임실읍 이도리에 있음.</p>
+  </header>
+  <div class="main">
+    <div class="box" id="mapbox">
+      <div class="bar"><div>임실군 <span id="crumb">· 읍·면 12곳</span></div>
+        <div class="btns"><button id="zin">임실읍 확대</button><button id="zout" class="ghost">전체 보기</button></div></div>
+      <svg id="map" role="img" aria-label="임실군 읍면 지도"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <aside class="box side">
+      <h2>단지 목록 <small style="color:var(--muted);font-weight:400">· 거래 많은 순</small></h2>
+      <div id="list"></div>
+      <div class="note">점 위치는 법정동(이도리) 중심 근처로 잡은 근삿값임. 거래 건수는 계약해제분 제외.</div>
+    </aside>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const MY = __MY__;
+const CX = __CX__;
+const won = v => v >= 10000 ? (v/10000).toFixed(1).replace(/\.0$/,"") + "억" : v.toLocaleString() + "만";
+const W = 600, H = 560;
+const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
+const proj = d3.geoMercator().fitExtent([[20,20],[W-20,H-20]], MY);
+const path = d3.geoPath(proj);
+const g = svg.append("g");
+MY.features.forEach(f => f.properties.c = CX.filter(d => d3.geoContains(f, [d.lon, d.lat])).length);
+const my = g.selectAll("path").data(MY.features).join("path")
+  .attr("class", f => "myeon" + (f.properties.c ? " has" : "")).attr("d", path);
+const outline = g.append("path").datum({type:"FeatureCollection",features:MY.features})
+  .attr("class","outline").attr("d", d => path(d));
+const lbl = g.selectAll("text").data(MY.features).join("text")
+  .attr("class", f => "lbl" + (f.properties.c ? " has" : ""))
+  .attr("transform", f => `translate(${path.centroid(f)})`)
+  .text(f => f.properties.c ? `${f.properties.n} ${f.properties.c}` : f.properties.n);
+const r = d3.scaleSqrt().domain([0, 30]).range([0, 14]);
+const dots = g.append("g").selectAll("circle").data(CX).join("circle")
+  .attr("class", d => "dot" + (d.tx < 30 ? " low" : ""))
+  .attr("cx", d => proj([d.lon,d.lat])[0]).attr("cy", d => proj([d.lon,d.lat])[1]);
+let k = 1;
+function rescale(){
+  dots.attr("r", d => Math.max(4, r(d.tx))/k).attr("stroke-width", 1.2/k);
+  my.style("stroke-width", 1/k); outline.style("stroke-width", 2/k);
+  lbl.style("font-size", 12/k + "px").style("stroke-width", 3/k);
+}
+const zoom = d3.zoom().scaleExtent([1, 200]).on("zoom", e => { k = e.transform.k; g.attr("transform", e.transform); rescale(); });
+svg.call(zoom).on("dblclick.zoom", null);
+rescale();
+const tip = document.getElementById("tip"), box = document.getElementById("mapbox");
+function showTip(e, d){
+  tip.hidden = false;
+  tip.innerHTML = `<b>${d.name}</b>${d.dong}<br>2026년 매매 <b style="display:inline">${d.tx}건</b><br>준공 ${d.year ?? "-"}년 · ${d.hh ? d.hh.toLocaleString()+"세대" : "세대수 미상"}<br>평균 거래가 ${won(d.avg)}원`;
+  const b = box.getBoundingClientRect(); let x = e.clientX - b.left + 12, y = e.clientY - b.top + 12;
+  if (x > b.width - 250) x -= 260; tip.style.left = x+"px"; tip.style.top = y+"px";
+}
+function hilite(d){
+  dots.classed("hi", x => x === d).filter(x => x === d).raise();
+  document.querySelectorAll(".row").forEach((el,i) => el.classList.toggle("on", data[i] === d));
+}
+dots.on("mouseenter click", (e,d) => { showTip(e,d); hilite(d); }).on("mouseleave", () => tip.hidden = true);
+function zoomTo(f, dur=700){
+  const [[x0,y0],[x1,y1]] = path.bounds(f);
+  const s = Math.min(200, 0.8 / Math.max((x1-x0)/W, (y1-y0)/H));
+  svg.transition().duration(dur).call(zoom.transform, d3.zoomIdentity.translate(W/2,H/2).scale(s).translate(-(x0+x1)/2, -(y0+y1)/2));
+}
+const imsileup = MY.features.find(f => f.properties.n === "임실읍");
+document.getElementById("zin").onclick = () => zoomTo(imsileup);
+document.getElementById("zout").onclick = () => svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
+const data = CX.slice().sort((a,b) => b.tx - a.tx);
+const list = document.getElementById("list");
+data.forEach((d,i) => {
+  const el = document.createElement("div"); el.className = "row"; el.tabIndex = 0;
+  el.innerHTML = `<span class="rk">${i+1}</span><span><div>${d.name}</div><small>${d.dong} · ${d.year ?? "-"}년 준공${d.hh ? " · "+d.hh+"세대" : ""}</small></span><span class="tx">${d.tx}건<small>평균 ${won(d.avg)}</small></span>`;
+  el.onclick = () => { hilite(d); const n = dots.filter(x => x === d).node(); const b = n.getBoundingClientRect(); showTip({clientX:b.left+b.width/2, clientY:b.top+b.height/2}, d); };
+  list.appendChild(el);
+});
+document.getElementById("legend").innerHTML =
+  `<span><i class="sw" style="background:var(--land-hi)"></i>단지가 있는 읍·면</span>` +
+  `<span><i class="sw" style="background:var(--dot-low);border-radius:50%"></i>5~29건 단지</span>` +
+  `<span><i class="sw" style="border:2px solid var(--accent)"></i>읍·면 경계</span>`;
+</script>
+</body>
+</html>
