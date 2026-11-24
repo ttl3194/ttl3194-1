@@ -117,6 +117,20 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
   </section>
 </div>
 
+<dialog id="imsilDlg" aria-label="임실군 지도" style="width:min(1140px,96vw);height:min(900px,92vh);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)"><b>임실군 지도</b><button type="button" id="imsilClose">닫기 ✕</button></div>
+  <iframe id="imsilFrame" title="임실군 지도" style="border:0;width:100%;height:calc(100% - 46px);display:block"></iframe>
+</dialog>
+<script>
+const IMSIL_HTML = __IMSIL__;
+function openImsil(){
+  const d = document.getElementById("imsilDlg"), f = document.getElementById("imsilFrame");
+  if (!f.srcdoc) f.srcdoc = IMSIL_HTML;
+  if (!d.open) d.showModal();
+}
+document.getElementById("imsilClose").onclick = () => document.getElementById("imsilDlg").close();
+document.getElementById("imsilDlg").addEventListener("click", e => { if (e.target.id === "imsilDlg") e.target.close(); });
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 const SGG = __SGG__;
@@ -214,7 +228,7 @@ function select(name){
     .attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k)
     .on("mouseenter click", (e,d) => { showTip(e,d); hilite(d); }).on("mouseleave", hideTip);
   document.getElementById("crumb").innerHTML = `전북특별자치도 › ${name} <span>· ${thr(name)}건 이상 ${cnt(name)}곳</span>`;
-  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <a href="https://claude.ai/artifact/HsDdNJjRHkHYXFrvxn2gAP" target="_blank" rel="noopener" style="margin-left:6px;color:var(--accent);font-weight:600">임실군 지도 새 창 ↗</a>`); try { window.open("https://claude.ai/artifact/HsDdNJjRHkHYXFrvxn2gAP", "_blank", "noopener"); } catch(e){} }
+  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <button type="button" id="imsilBtn" style="margin-left:6px">임실군 지도 창 열기</button>`); document.getElementById("imsilBtn").onclick = openImsil; openImsil(); }
   document.getElementById("reset").disabled = false;
   renderList(name, data);
   dongReady.then(() => { if (current === name) drawDongs(name); });
