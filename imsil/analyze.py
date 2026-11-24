@@ -71,7 +71,21 @@ def factors(prev, cur, label_prev, label_cur):
         verdict = '동일 단지·평형 기준으로는 ±2% 미만 → 시세 변동이 아니라 거래된 단지·층 구성이 달라서 생긴 차이로 판단'
     else:
         verdict = f"동일 단지·평형 기준으로도 {like:+.1f}% → 실제 시세 {'상승' if like > 0 else '하락'} 요인 있음"
-    return out, verdict, like
+    # 20자 이내 요약
+    tags = []
+    if like is not None and abs(like) >= 2:
+        tags.append('전체적 가격상승' if like > 0 else '전체적 가격하락')
+    if newc: tags.append('신축 거래 포함')
+    elif abs(a - b) >= 25 or abs(old) >= 0.25: tags.append('신축·구축 구성차')
+    if abs(fa - fbv) >= 3 or abs(g1 - g2) >= 0.25: tags.append('층별 차이')
+    if min(np_, nc) <= 2: tags.append('개별 사정')
+    if not tags: tags.append('거래 구성 차이')
+    short = ''
+    for t in tags:
+        cand = (short + '·' + t) if short else t
+        if len(cand) > 20: break
+        short = cand
+    return out, verdict, like, short
 
 def seg_tables(key, labels):
     res = []
@@ -91,7 +105,7 @@ def seg_tables(key, labels):
             ent = {'ch': round(ch, 1), 'from': prev_m['m'], 'gap': gap, 'flag': abs(ch) >= 2}
             if ent['flag']:
                 P = [r for r in S if r['m'] == prev_m['m']]; C = [r for r in S if r['m'] == cell['m']]
-                ent['factors'], ent['verdict'], ent['like'] = factors(P, C, f"{prev_m['m']}월", f"{cell['m']}월")
+                ent['factors'], ent['verdict'], ent['like'], ent['short'] = factors(P, C, f"{prev_m['m']}월", f"{cell['m']}월")
             mom.append(ent); prev_m = cell
         qs = []
         for q in range(1, 5):
@@ -106,7 +120,7 @@ def seg_tables(key, labels):
             ent = {'ch': round(ch, 1), 'from': pq['q'], 'flag': abs(ch) >= 2}
             if ent['flag']:
                 P = [r for r in S if r['q'] == pq['q']]; C = [r for r in S if r['q'] == c['q']]
-                ent['factors'], ent['verdict'], ent['like'] = factors(P, C, f"{pq['q']}분기", f"{c['q']}분기")
+                ent['factors'], ent['verdict'], ent['like'], ent['short'] = factors(P, C, f"{pq['q']}분기", f"{c['q']}분기")
             qoq.append(ent); pq = c
         res.append({'key': k, 'label': lab, 'n': len(S), 'months': months, 'mom': mom, 'quarters': qs, 'qoq': qoq,
                     'pp': avg([r['pp'] for r in S])})

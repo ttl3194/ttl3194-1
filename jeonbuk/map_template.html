@@ -117,17 +117,27 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
   </section>
 </div>
 
-<dialog id="imsilDlg" aria-label="임실군 지도" style="width:min(1140px,96vw);height:min(920px,94vh);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)"><b>임실군 지도</b><button type="button" id="imsilClose">닫기 ✕</button></div>
+<dialog id="imsilDlg" aria-label="임실군 아파트 시세분석" style="width:min(1200px,96vw);height:min(940px,94vh);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)"><b>임실군 아파트 시세분석</b><button type="button" id="imsilClose">닫기 ✕</button></div>
   <div style="height:calc(100% - 46px);overflow:auto">
+    <iframe id="imsilReport" title="임실군 아파트 시세분석" style="border:0;width:100%;height:1600px;display:block"></iframe>
     <iframe id="imsilFrame" title="임실군 지도" style="border:0;width:100%;height:1150px;display:block"></iframe>
   </div>
 </dialog>
 <script>
 const IMSIL_HTML = __IMSIL__;
+const IMSIL_REPORT = __IMSIL_REPORT__;
+function fitFrame(fr){
+  fr.addEventListener("load", () => { try {
+    const doc = fr.contentDocument, set = () => { fr.style.height = (doc.documentElement.scrollHeight + 4) + "px"; };
+    set(); new ResizeObserver(set).observe(doc.body);
+  } catch(e){} }, {once:true});
+}
 function openImsil(){
   const d = document.getElementById("imsilDlg"), f = document.getElementById("imsilFrame");
-  if (!f.srcdoc) f.srcdoc = IMSIL_HTML;
+  if (!f.srcdoc) { f.srcdoc = IMSIL_HTML; fitFrame(f); }
+  const r = document.getElementById("imsilReport");
+  if (!r.srcdoc) { r.srcdoc = IMSIL_REPORT; fitFrame(r); }
   if (!d.open) d.showModal();
 }
 document.getElementById("imsilClose").onclick = () => document.getElementById("imsilDlg").close();
@@ -230,7 +240,7 @@ function select(name){
     .attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k)
     .on("mouseenter click", (e,d) => { showTip(e,d); hilite(d); }).on("mouseleave", hideTip);
   document.getElementById("crumb").innerHTML = `전북특별자치도 › ${name} <span>· ${thr(name)}건 이상 ${cnt(name)}곳</span>`;
-  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <button type="button" id="imsilBtn" style="margin-left:6px">임실군 지도 창 열기</button>`); document.getElementById("imsilBtn").onclick = openImsil; openImsil(); }
+  if (name === "임실군") { document.getElementById("crumb").insertAdjacentHTML("beforeend", ` <button type="button" id="imsilBtn" style="margin-left:6px">임실군 시세분석 열기</button>`); document.getElementById("imsilBtn").onclick = openImsil; openImsil(); }
   document.getElementById("reset").disabled = false;
   renderList(name, data);
   dongReady.then(() => { if (current === name) drawDongs(name); });

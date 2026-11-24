@@ -52,8 +52,10 @@ td.flag{cursor:pointer;outline-offset:-2px} td.flag:focus-visible,td.flag.sel{ou
 .tabs button,.btn{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
 .tabs button[aria-selected="true"],.btn.primary{background:var(--accent);color:var(--panel)}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
-.fl{border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:10px 12px;font-size:.85rem;display:flex;flex-direction:column;gap:4px;min-width:0}
+.flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px}
+.fl{border:1px solid var(--line);border-left-width:4px;border-radius:6px;padding:6px 10px;font-size:.82rem;display:flex;justify-content:space-between;gap:8px;min-width:0}
+.fl .s{font-weight:600;text-align:right}
+.why{color:var(--fg)!important;font-weight:500}
 .fl.up{border-left-color:var(--up)} .fl.down{border-left-color:var(--down)} .fl.mix{border-left-color:var(--mix)}
 .fl .t{font-weight:600} .fl ul{margin:2px 0 0;padding-left:18px;color:var(--muted)} .fl .v{font-weight:500}
 .fl.sel{box-shadow:0 0 0 2px var(--fg)}
@@ -108,7 +110,7 @@ td.ex{color:var(--muted);text-decoration:line-through}
     <h3>분기별 (전 분기 대비)</h3>
     <div class="tw"><table id="tSegQ"></table></div>
     <h3>변동 요인 분석</h3>
-    <p class="note" style="margin:0">강조된 칸을 누르면 해당 요인 카드로 이동함. 전월에 거래가 없으면 직전 거래월과 비교했음.</p>
+    <p class="note" style="margin:0">강조된 칸을 누르면 아래 목록의 해당 줄이 표시됨. 전월에 거래가 없으면 직전 거래월과 비교했음. 세부 근거는 요청 시 제공.</p>
     <div class="flags" id="flags"></div>
   </section>
 
@@ -128,9 +130,7 @@ td.ex{color:var(--muted);text-decoration:line-through}
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
         <div class="method">
           <div><span class="pill on">주 방식</span> <b>거래사례비교법</b> (감정평가에 관한 규칙 제16조)</div>
-          <div class="note">아파트처럼 구분소유 건물과 대지사용권을 함께 평가할 때는 거래사례비교법을 적용함. 인근의 같은 단지·비슷한 면적 거래를 사례로 골라 아래 순서로 보정함.</div>
-          <div class="formula">비준가격 = 사례 ㎡당 가격 × 사정보정 × 시점수정 × 개별요인(층) 보정 × 대상 전용면적</div>
-          <div class="note">· 사정보정: 사례 평균에서 25% 넘게 벗어난 거래(특수관계·급매 의심)는 제외<br>· 시점수정: 동일 단지·평형 월별 추세(아래 표). 한국부동산원 지수를 대신한 값<br>· 개별요인(층): 같은 단지·평형 안 층 구간별 가격 차이(표본 적은 구간은 1.0 쪽으로 축소)</div>
+          <div class="formula">비준가격 = 사례가격 × 사정보정 × 시점수정 × 층 보정 × 면적</div>
         </div>
         <div class="method">
           <div><span class="pill">참고</span> <b>원가법</b> · <b>수익환원법</b> — 이번 산정에는 쓰지 않음</div>
@@ -138,16 +138,9 @@ td.ex{color:var(--muted);text-decoration:line-through}
         </div>
       </div>
     </div>
-    <h3>비교 사례와 보정 내역</h3>
-    <div class="tw"><table id="tComp"></table></div>
-    <div class="tw"><table id="tCoef"></table></div>
+    <p class="note" style="margin:0">비교 사례·보정 내역·거래 원자료는 요청 시 별도 제공.</p>
   </section>
 
-  <section class="card" aria-labelledby="h-raw">
-    <div class="sec-head"><h2 id="h-raw">거래 원자료</h2><p id="rawCount"></p></div>
-    <div class="tw"><table id="tRaw"></table></div>
-    <p class="note" id="src" style="margin:0"></p>
-  </section>
 </div>
 
 <script>
@@ -190,7 +183,7 @@ $("chips").innerHTML =
   s += line(D.monthly.map(d=>d.pp), false, "var(--fg)");
   s += line(kMonthly, true, "var(--up)");
   M.forEach(m => s += `<text x="${x(m)}" y="${H-12}" text-anchor="middle">${m}월</text>`);
-  s += `<text x="${L-6}" y="12" text-anchor="end">평당가(만원)</text><text x="${W-R+6}" y="12">건수</text>`;
+  s += `<text x="4" y="12">평당가(만원)</text><text x="${W-R+6}" y="12">건수</text>`;
   svg.innerHTML = s;
   $("chartLegend").innerHTML = `<span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>거래 건수(오른쪽 축)</span>` +
     `<span><i class="sw" style="background:var(--fg)"></i>전체 평균 평당가</span>` +
@@ -222,7 +215,7 @@ function renderSeg(){
   S.forEach(s => { h += `<tr><td>${s.label}<small>${s.n}건</small></td>`;
     s.months.forEach((c,i) => { const e = s.mom[i]; const id = `f-${mode}-${s.key}-m${c.m}`;
       if(!c.n){ h += "<td>-</td>"; return; }
-      const chg = e ? `<span class="chg">${pct(e.ch)}${e.gap>1?` <small style="display:inline">(${e.from}월比)</small>`:""}</span>` : "";
+      const chg = e ? `<span class="chg">${pct(e.ch)}${e.gap>1?` <small style="display:inline">(${e.from}월比)</small>`:""}</span>${e.flag?`<small class="why">${e.short}</small>`:""}` : "";
       h += `<td class="${cls(e)}${e&&e.flag?" flag":""}" ${e&&e.flag?`tabindex="0" data-go="${id}"`:""}>${c.pp.toLocaleString()}만<small>${c.n}건 · ${won(c.price)}</small>${chg}</td>`; });
     h += `<td>${s.pp.toLocaleString()}만</td></tr>`; });
   $("tSegM").innerHTML = h + "</tbody>";
@@ -230,7 +223,7 @@ function renderSeg(){
   S.forEach(s => { h += `<tr><td>${s.label}</td>`;
     s.quarters.forEach((c,i) => { const e = s.qoq[i]; const id = `f-${mode}-${s.key}-q${c.q}`;
       if(!c.n){ h += "<td>-</td>"; return; }
-      h += `<td class="${cls(e)}${e&&e.flag?" flag":""}" ${e&&e.flag?`tabindex="0" data-go="${id}"`:""}>${c.pp.toLocaleString()}만<small>${c.n}건</small>${e?`<span class="chg">${pct(e.ch)}</span>`:""}</td>`; });
+      h += `<td class="${cls(e)}${e&&e.flag?" flag":""}" ${e&&e.flag?`tabindex="0" data-go="${id}"`:""}>${c.pp.toLocaleString()}만<small>${c.n}건</small>${e?`<span class="chg">${pct(e.ch)}</span>${e.flag?`<small class="why">${e.short}</small>`:""}`:""}</td>`; });
     h += "</tr>"; });
   $("tSegQ").innerHTML = h + "</tbody>";
   // 요인 카드
@@ -248,9 +241,7 @@ function renderSeg(){
     td.onclick = go; td.onkeydown = ev => { if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } }; });
 }
 function card(id, title, e){
-  const k = kind(e), lab = k==="up"?"실제 상승":k==="down"?"실제 하락":"구성·표본 차이";
-  return `<div class="fl ${k}" id="${id}"><div class="t">${title} <span class="pill">${lab}</span></div>` +
-    `<ul>${e.factors.map(x=>`<li>${x}</li>`).join("")}</ul><div class="v">판단: ${e.verdict}</div></div>`;
+  return `<div class="fl ${kind(e)}" id="${id}"><span class="t">${title}</span><span class="s">${e.short}</span></div>`;
 }
 $("tabArea").onclick = () => { mode="area"; $("tabArea").setAttribute("aria-selected","true"); $("tabFloor").setAttribute("aria-selected","false"); renderSeg(); };
 $("tabFloor").onclick = () => { mode="floor"; $("tabFloor").setAttribute("aria-selected","true"); $("tabArea").setAttribute("aria-selected","false"); renderSeg(); };
@@ -296,18 +287,13 @@ function valuate(){
   rows.forEach(r => { const c = r.ex ? ' class="ex"' : "";
     h += `<tr><td${c}>${r.t.date}</td><td${c}>${r.t.floor}층</td><td${c}>${r.t.area}</td><td${c}>${won(r.t.price)}</td><td${c}>${Math.round(r.unit).toLocaleString()}만</td>` +
       `<td>${r.ex?"제외(이상거래)":"1.000"}</td><td${c}>${r.tf.toFixed(3)}<small>${mon-r.t.m}개월 × ${r.rate.toFixed(2)}%</small></td><td${c}>${r.ff.toFixed(3)}</td><td${c}><b>${won(Math.round(r.val/100)*100)}</b></td></tr>`; });
-  $("tComp").innerHTML = h + "</tbody>";
+  if ($("tComp")) $("tComp").innerHTML = h + "</tbody>";
 }
-$("tCoef").innerHTML = `<thead><tr><th>보정 기준표</th>${Object.values(D.floor_coef).map(c=>`<th>${c.label}</th>`).join("")}<th>시점수정률(월)</th></tr></thead><tbody>` +
+if ($("tCoef")) $("tCoef").innerHTML = `<thead><tr><th>보정 기준표</th>${Object.values(D.floor_coef).map(c=>`<th>${c.label}</th>`).join("")}<th>시점수정률(월)</th></tr></thead><tbody>` +
   `<tr><td>층 보정계수 (표본 건수)</td>${Object.values(D.floor_coef).map(c=>`<td>${c.coef.toFixed(3)}<small>원값 ${c.raw.toFixed(3)} · ${c.n}건</small></td>`).join("")}` +
   `<td>${D.time_basis.map(b=>`${b.grp} ${b.rate>0?"+":""}${b.rate}%`).join("<br>")}<small>그 외 단지는 ${D.time_rate_grp} 값 적용</small></td></tr></tbody>`;
 $("selName").onchange = () => { fillAreas(); valuate(); };
 ["selArea","inFloor","selMonth"].forEach(id => $(id).oninput = valuate);
 fillAreas(); valuate();
 
-// 원자료
-$("rawCount").textContent = `${total}건 · 계약일 순`;
-$("tRaw").innerHTML = `<thead><tr><th>계약일</th><th>단지</th><th>전용㎡</th><th>층</th><th>거래가</th><th>평당가</th><th>준공</th></tr></thead><tbody>` +
-  tx.map(t=>`<tr><td>${t.date}</td><td style="text-align:left">${t.name}</td><td>${t.area}</td><td>${t.floor}</td><td>${won(t.price)}</td><td>${t.pp.toLocaleString()}만</td><td>${t.build}</td></tr>`).join("") + "</tbody>";
-$("src").textContent = "자료: " + D.source + ". 신고기한(계약 후 30일) 때문에 10~11월 거래는 이후 더 늘 수 있음. 평균가는 전 평형 혼합이라 단지·평형 구성에 따라 달라짐.";
 </script>
