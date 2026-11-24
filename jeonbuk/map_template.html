@@ -117,31 +117,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
   </section>
 </div>
 
-<style>.gmb{font:inherit;font-size:.82rem;padding:5px 10px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}.gmb.on{background:var(--accent);color:var(--panel)}</style>
 <dialog id="imsilDlg" aria-label="임실군 지도" style="width:min(1140px,96vw);height:min(920px,94vh);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)"><b>임실군 지도</b><button type="button" id="imsilClose">닫기 ✕</button></div>
   <div style="height:calc(100% - 46px);overflow:auto">
-    <div style="padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center" id="gmBtns"><b style="margin-right:6px">구글지도 위치</b></div>
-    <iframe id="gmFrame" title="구글지도 임실군 위치" style="border:0;width:100%;height:420px;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
-    <div style="padding:4px 12px 8px;font-size:.78rem;color:var(--muted)">구글지도가 안 보이면 게시 환경에서 외부 지도 삽입이 막힌 것임. 아래 그림 지도는 그대로 볼 수 있음.</div>
     <iframe id="imsilFrame" title="임실군 지도" style="border:0;width:100%;height:1150px;display:block"></iframe>
   </div>
 </dialog>
 <script>
 const IMSIL_HTML = __IMSIL__;
-let GM_PLACES = null;
-function gmGo(q, z, btn){ document.getElementById("gmFrame").src = "https://maps.google.com/maps?q=" + encodeURIComponent(q) + "&z=" + z + "&hl=ko&output=embed";
-  document.querySelectorAll("#gmBtns button").forEach(b => b.classList.toggle("on", b === btn)); }
-function gmInit(){
-  GM_PLACES = [["임실군 전체","전북특별자치도 임실군",11],["임실읍 이도리","전북특별자치도 임실군 임실읍 이도리",15]].concat(
-    CX.filter(d => d.sg === "임실군").sort((a,b)=>b.tx-a.tx).map(d => [d.name + " " + d.tx + "건", "임실군 " + d.name + " 아파트", 17]));
-  GM_PLACES.forEach(([label,q,z]) => { const b = document.createElement("button"); b.type = "button"; b.className = "gmb"; b.textContent = label;
-    b.onclick = () => gmGo(q, z, b); document.getElementById("gmBtns").appendChild(b); });
-  const first = document.querySelector("#gmBtns button"); gmGo(GM_PLACES[0][1], GM_PLACES[0][2], first);
-}
 function openImsil(){
   const d = document.getElementById("imsilDlg"), f = document.getElementById("imsilFrame");
-  if (!GM_PLACES) gmInit();
   if (!f.srcdoc) f.srcdoc = IMSIL_HTML;
   if (!d.open) d.showModal();
 }
