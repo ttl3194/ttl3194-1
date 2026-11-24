@@ -11,3 +11,18 @@
 - 다음: 부안, 무주, 장수, 순창
 - 부안 최대23, 순창 15, 무주 13, 장수 5, 진안 7, 고창 24 -> 30건 이상 없음
 - 수집 완료: complexes.tsv 173곳 + reference_imsil.tsv
+## 2차 요청(11/24): 김제 부안 고창 순창 남원 임실 장수 진안 무주 -> 5건 이상 단지 (complexes5.tsv)
+- 확보: 김제 offset0-20(마지막5)->page3, 남원 0-2(24), 고창 0-2(9), 임실 완료(4), 부안0, 순창0, 무주0, 장수0(5)
+- 다음: 김제 limit7 page1, 남원 limit3 page1.., 고창 limit3 page1, 부안/순창/무주/장수/진안 limit7 page0
+- 김제 완료(page3 4건부터 미달)
+- 고창 완료. 남원 offset0-5 저장 -> 다음 limit6 page1
+- 남원 offset0-11 저장 -> 다음 limit6 page2
+- 남원 offset0-17 저장(마지막9) -> 다음 limit6 page3
+- 남원 offset0-23 저장(마지막5) -> limit3 page8
+- 남원 완료. 다음 부안/순창/무주/장수/진안 limit7 page0
+- 부안 offset0-5 저장(기존 행 교체) -> limit6 page1
+- 부안 offset0-11 저장(마지막5) -> limit3 page4
+- 부안 완료. 순창 기존행 삭제 -> limit6 page0
+- 순창 offset0-5 저장(마지막6) -> limit3 page2; 무주 기존행 삭제
+- 순창·무주 완료. 장수 기존행 삭제 -> 장수/진안 조회
+- 수집 전부 완료. 다음: build/템플릿 통합
