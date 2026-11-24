@@ -87,6 +87,33 @@ td.ex{color:var(--muted);text-decoration:line-through}
     <div class="chips" id="chips"></div>
   </header>
 
+  <section class="card" aria-labelledby="h-val">
+    <div class="sec-head"><h2 id="h-val">매도 의뢰 예상 매매가 산정</h2><p>중개 상담용 간이 산정. 정식 감정평가서가 아님.</p></div>
+    <div class="form">
+      <label for="selName">단지<select id="selName"></select></label>
+      <label for="selArea">전용면적<select id="selArea"></select></label>
+      <label for="inFloor">해당 층<input id="inFloor" type="number" min="1" max="40" value="10"></label>
+      <label for="selMonth">기준 시점<select id="selMonth"></select></label>
+    </div>
+    <div class="grid2">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="est" id="est"></div>
+        <div class="summary" id="summary"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="method">
+          <div><span class="pill on">주 방식</span> <b>거래사례비교법</b> (감정평가에 관한 규칙 제16조)</div>
+          <div class="formula">비준가격 = 사례가격 × 사정보정 × 시점수정 × 층 보정 × 면적</div>
+        </div>
+        <div class="method">
+          <div><span class="pill">참고</span> <b>원가법</b> · <b>수익환원법</b> — 이번 산정에는 쓰지 않음</div>
+          <div class="note">원가법은 건물 재조달원가·토지가치를 따로 구해야 해 아파트 일괄 거래에 맞지 않음. 수익환원법은 전월세 자료를 아직 모으지 않아 적용하지 않았음(추후 전월세 시세로 검증 가능).</div>
+        </div>
+      </div>
+    </div>
+    <p class="note" style="margin:0">비교 사례·보정 내역·거래 원자료는 요청 시 별도 제공.</p>
+  </section>
+
   <section class="card" aria-labelledby="h-trend">
     <div class="sec-head"><h2 id="h-trend">월별 매매 추이</h2><p>평당가는 전용면적 3.3㎡(1평)당 금액. 단지·평형 구성이 달마다 달라 평균가는 크게 출렁임.</p></div>
     <svg class="chart" id="chart" viewBox="0 0 900 300" role="img" aria-label="월별 거래 건수와 평당가"></svg>
@@ -114,32 +141,6 @@ td.ex{color:var(--muted);text-decoration:line-through}
     <div class="flags" id="flags"></div>
   </section>
 
-  <section class="card" aria-labelledby="h-val">
-    <div class="sec-head"><h2 id="h-val">매도 의뢰 예상 매매가 산정</h2><p>중개 상담용 간이 산정. 정식 감정평가서가 아님.</p></div>
-    <div class="form">
-      <label for="selName">단지<select id="selName"></select></label>
-      <label for="selArea">전용면적<select id="selArea"></select></label>
-      <label for="inFloor">해당 층<input id="inFloor" type="number" min="1" max="40" value="10"></label>
-      <label for="selMonth">기준 시점<select id="selMonth"></select></label>
-    </div>
-    <div class="grid2">
-      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
-        <div class="est" id="est"></div>
-        <div class="summary" id="summary"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
-        <div class="method">
-          <div><span class="pill on">주 방식</span> <b>거래사례비교법</b> (감정평가에 관한 규칙 제16조)</div>
-          <div class="formula">비준가격 = 사례가격 × 사정보정 × 시점수정 × 층 보정 × 면적</div>
-        </div>
-        <div class="method">
-          <div><span class="pill">참고</span> <b>원가법</b> · <b>수익환원법</b> — 이번 산정에는 쓰지 않음</div>
-          <div class="note">원가법은 건물 재조달원가·토지가치를 따로 구해야 해 아파트 일괄 거래에 맞지 않음. 수익환원법은 전월세 자료를 아직 모으지 않아 적용하지 않았음(추후 전월세 시세로 검증 가능).</div>
-        </div>
-      </div>
-    </div>
-    <p class="note" style="margin:0">비교 사례·보정 내역·거래 원자료는 요청 시 별도 제공.</p>
-  </section>
 
 </div>
 
