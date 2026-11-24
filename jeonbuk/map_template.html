@@ -76,13 +76,19 @@ th{color:var(--muted);font-weight:500;font-size:.78rem;letter-spacing:.03em}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
 .gu{font-size:.92rem;margin:10px 0 4px;color:var(--accent)}
 .src{font-size:.78rem;color:var(--muted)}
+.dong{fill:var(--panel);stroke:var(--muted);stroke-opacity:.55;cursor:default}
+.dong.has{fill:var(--shade2)}
+.dong:hover{fill:var(--land-hi)}
+.dlbl{fill:var(--muted);text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--panel)}
+.dlbl.has{fill:var(--fg);font-weight:600}
+.loading{font-size:.78rem;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.sgg{transition:none}}
 </style>
 
 <div class="wrap">
   <header>
     <h1>전북 아파트 거래 지도</h1>
-    <p>2026년 1월 1일부터 11월 23일까지 매매 신고가 30건 이상인 아파트 단지를 시·군·구별로 표시했음. 시군구를 누르면 그 지역이 확대되고 해당 단지가 점으로 나옴.</p>
+    <p>2026년 1월 1일부터 11월 23일까지 매매 신고가 30건 이상인 아파트 단지를 시·군·구별로 표시했음. 시군구를 누르면 그 지역이 확대되면서 읍·면·동 경계와 이름이 함께 나오고, 해당 단지가 점으로 표시됨. 마우스 휠이나 두 손가락으로 더 확대할 수 있음.</p>
     <div class="chips" id="chips"></div>
   </header>
 
@@ -158,16 +164,24 @@ const labels = g.append("g").selectAll("text").data(SGG.features).join("text").a
 labels.append("tspan").text(d => short(d.properties.name) + " ");
 labels.append("tspan").attr("class","n").text(d => cnt(d.properties.name));
 
+const dongG = g.append("g"), dongLblG = g.append("g");
+let DONG = null;
+const dongReady = fetch("dong_jb.json").then(r => r.json()).then(j => {
+  DONG = j;
+  DONG.features.forEach(f => { f.properties.c = main.filter(d => d.sg === f.properties.sg && d3.geoContains(f, [d.lon, d.lat])).length; });
+}).catch(() => { DONG = {features: []}; });
 const dotsG = g.append("g");
 const r = d3.scaleSqrt().domain([0, 160]).range([0, 15]);
 const tip = document.getElementById("tip"), box = document.getElementById("mapbox");
 let k = 1;
 
-const zoom = d3.zoom().scaleExtent([1, 40]).on("zoom", e => {
+const zoom = d3.zoom().scaleExtent([1, 120]).on("zoom", e => {
   k = e.transform.k; g.attr("transform", e.transform);
   labels.style("font-size", (12/k)+"px").style("stroke-width",(3/k)+"px");
   polys.style("stroke-width", (current?1.6:1.2)/k);
   dotsG.selectAll("circle").attr("r", d => Math.max(3, r(d.tx))/k).attr("stroke-width", 1.2/k);
+  dongG.selectAll("path").style("stroke-width", 0.8/k);
+  dongLblG.selectAll("text").style("font-size", d => (d.properties.c ? 11 : 9.5)/k + "px").style("stroke-width", 2.5/k);
 });
 svg.call(zoom).on("dblclick.zoom", null);
 
@@ -200,12 +214,27 @@ function select(name){
   document.getElementById("crumb").innerHTML = `전북특별자치도 › ${name} <span>· 30건 이상 ${cnt(name)}곳</span>`;
   document.getElementById("reset").disabled = false;
   renderList(name, data);
+  dongReady.then(() => { if (current === name) drawDongs(name); });
+}
+function drawDongs(name){
+  const fs = DONG.features.filter(f => f.properties.sg === name);
+  dongG.selectAll("path").data(fs, f => f.properties.sg + f.properties.n).join("path")
+    .attr("class", f => "dong" + (f.properties.c ? " has" : "")).attr("d", path).style("stroke-width", 0.8/k)
+    .on("mouseenter", (e,f) => { tip.hidden = false; tip.innerHTML = `<b>${f.properties.n}</b>${name}<br>30건 이상 단지 ${f.properties.c}곳`;
+        const b = box.getBoundingClientRect(); tip.style.left = (e.clientX-b.left+12)+"px"; tip.style.top = (e.clientY-b.top+12)+"px"; })
+    .on("mouseleave", hideTip);
+  dongLblG.selectAll("text").data(fs, f => f.properties.sg + f.properties.n).join("text")
+    .attr("class", f => "dlbl" + (f.properties.c ? " has" : ""))
+    .attr("transform", f => { const c = path.centroid(f); return `translate(${c[0]},${c[1]})`; })
+    .style("font-size", f => (f.properties.c ? 11 : 9.5)/k + "px").style("stroke-width", 2.5/k)
+    .text(f => f.properties.c ? `${f.properties.n} ${f.properties.c}` : f.properties.n);
+  dotsG.raise(); dongLblG.raise();
 }
 function reset(){
   current = null; hideTip();
   svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
   paint(); polys.classed("dim", false).classed("sel", false); labels.style("display", null);
-  dotsG.selectAll("circle").remove();
+  dotsG.selectAll("circle").remove(); dongG.selectAll("path").remove(); dongLblG.selectAll("text").remove();
   document.getElementById("crumb").innerHTML = `전북특별자치도 <span>· 시군구를 선택하면 확대됨</span>`;
   document.getElementById("reset").disabled = true;
   renderOverview();
@@ -248,7 +277,7 @@ renderOverview();
 // legend
 const lg = document.getElementById("legend");
 lg.innerHTML = ["0곳","1~4곳","5~19곳","20~39곳","40곳 이상"].map((t,i)=>`<span><i class="sw" style="background:var(${shadeVars[i]})"></i>${t}</span>`).join("") +
-  `<span><i class="sw" style="background:var(--dot);border-radius:50%;width:10px"></i>30건 이상 단지</span><span><i class="sw" style="border:1.5px solid var(--dot-ref);border-radius:50%;width:10px"></i>참고(임실)</span>`;
+  `<span><i class="sw" style="background:var(--shade2);border:1px solid var(--muted)"></i>단지가 있는 읍·면·동</span><span><i class="sw" style="background:var(--dot);border-radius:50%;width:10px"></i>30건 이상 단지</span><span><i class="sw" style="border:1.5px solid var(--dot-ref);border-radius:50%;width:10px"></i>참고(임실)</span>`;
 
 // tables grouped 시·군 → 구
 const tb = document.getElementById("tables");
