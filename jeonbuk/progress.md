@@ -1,0 +1,40 @@
+# 수집 진행상황 (realty_search_complexes, period_months=11, sort=name(거래량순), limit=7)
+- 기준: 2026-01~2026-11-23 매매 30건 이상. 지도 위치: 법정동 중심점(사용자 확정)
+- 완료(익산 포함): 전주 완산구(45), 덕진구(45), 군산시(34)
+- 익산시: 완료(32)
+- 남은 지역: 정읍, 남원, 김제, 완주, 무주, 장수, 임실, 순창, 고창, 부안 (진안 최대 7건 -> 제외)
+- 사용자 요청: 임실군 꼭 포함 (30건 미만이어도 지도에 임실 표시 + 상위 단지 참고표시)
+- 임실: 최대 27건(30 미만) -> reference_imsil.tsv에 참고표시용 저장. 완주: 완료(17)
+- 정읍: 완료(5)
+- 김제: 완료(1)
+- 남원: 완료(1), 고창: 0(최대24)
+- 다음: 부안, 무주, 장수, 순창
+- 부안 최대23, 순창 15, 무주 13, 장수 5, 진안 7, 고창 24 -> 30건 이상 없음
+- 수집 완료: complexes.tsv 173곳 + reference_imsil.tsv
+## 2차 요청(11/24): 김제 부안 고창 순창 남원 임실 장수 진안 무주 -> 5건 이상 단지 (complexes5.tsv)
+- 확보: 김제 offset0-20(마지막5)->page3, 남원 0-2(24), 고창 0-2(9), 임실 완료(4), 부안0, 순창0, 무주0, 장수0(5)
+- 다음: 김제 limit7 page1, 남원 limit3 page1.., 고창 limit3 page1, 부안/순창/무주/장수/진안 limit7 page0
+- 김제 완료(page3 4건부터 미달)
+- 고창 완료. 남원 offset0-5 저장 -> 다음 limit6 page1
+- 남원 offset0-11 저장 -> 다음 limit6 page2
+- 남원 offset0-17 저장(마지막9) -> 다음 limit6 page3
+- 남원 offset0-23 저장(마지막5) -> limit3 page8
+- 남원 완료. 다음 부안/순창/무주/장수/진안 limit7 page0
+- 부안 offset0-5 저장(기존 행 교체) -> limit6 page1
+- 부안 offset0-11 저장(마지막5) -> limit3 page4
+- 부안 완료. 순창 기존행 삭제 -> limit6 page0
+- 순창 offset0-5 저장(마지막6) -> limit3 page2; 무주 기존행 삭제
+- 순창·무주 완료. 장수 기존행 삭제 -> 장수/진안 조회
+- 수집 전부 완료. 다음: build/템플릿 통합
+## 3차 요청: 정읍·완주도 5건 기준 추가. 정읍 offset5부터, 완주 offset12부터(중복 dedupe)
+- 정읍 offset5-9 저장 -> limit5 page2. 주의: 동명 단지(현대) 있어 dedupe키에 dong 포함 필요, JS key도
+- 정읍 offset~14 저장 -> limit5 page3
+- 정읍 offset~19 저장(마지막13) -> limit5 page4
+- 정읍 offset~24 저장(마지막12) -> limit5 page5
+- 정읍 offset~29 저장(마지막8) -> limit5 page6
+- 정읍 offset~34 저장(마지막7) -> limit5 page7
+- 정읍 완료. 완주 limit6 page2(offset12-17)부터
+- 완주 offset18-23 저장. 남은: offset17(limit1 page17), limit6 page4~
+- 완주 offset~29 저장(마지막12) -> limit6 page5
+- 완주 offset~35 저장(마지막7) -> limit6 page6
+- 정읍·완주 수집 완료. 다음: build2 LOW에 정읍·완주 추가, dedupe키 dong포함, 템플릿 텍스트, JS key
